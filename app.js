@@ -1,37 +1,28 @@
 #!/usr/bin/env node
-var http = require('http');
 var readability = require('node-readability');
 var htmlToText = require('html-to-text');
-var urlTest = require('url');
+var express = require('express');
+var app = express();
+var port = process.env.PORT || 8081;
 
-var server = http.createServer(
+// routes will go here
+app.get('/api/rss', function (req, res, next) {
 
-    function (request, response) {
+  if (req.params('url') != undefined) {
+      scraper(req.params('url'), function (data) {
+          res.send(JSON.stringify(data));
+      });
+  }else{
+      res.send('error');
+  }
 
-        if(request.method == 'GET') {
+});
 
-            var url_parts = urlTest.parse(request.url, true);
-            console.log("GET");
-            response.writeHead(200);
-            var string = url_parts.query.url;
 
-            if (string != undefined) {
-                scraper(string, function (data) {
-                    console.log(JSON.stringify(data));
-                    response.write(JSON.stringify(data));
-                    response.end();
-                });
-            }else{
-                response.end();
+// start the server
+app.listen(port);
 
-            }
-
-        }
-    }
-);
-
-server.listen(8080);
-
+//helper functions
 function scraper(urlPassedIn, callback) {
     console.log(urlPassedIn);
     readability(urlPassedIn, function(err, article, meta) {
